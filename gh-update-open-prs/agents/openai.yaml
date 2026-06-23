@@ -1,0 +1,4 @@
+interface:
+  display_name: "Update Open Pull Requests"
+  short_description: "Merge current base branches into every open GitHub PR"
+  default_prompt: "Use $gh-update-open-prs to update every open pull request with its latest base branch, validate it, push it, and report the results."
