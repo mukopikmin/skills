@@ -16,7 +16,7 @@ Update the open pull requests that exist when the run begins. Preserve contribut
 - Use a distinct temporary worktree and temporary local branch for each PR. Never check a PR branch out over the user's current branch.
 - Process PRs sequentially so pushes, CI attribution, and failure reports remain unambiguous.
 - Continue with the next PR after a PR-specific failure. Stop the whole run only when a shared prerequisite such as authentication or base-repository access is unavailable.
-- Keep the original language of code and documentation. Write the final report in the user's language.
+- Keep the original language of code and documentation. Use the user's language for progress updates and result reports, including the final report.
 
 ## 1. Establish The Run Snapshot
 
