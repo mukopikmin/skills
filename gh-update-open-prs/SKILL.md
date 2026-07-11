@@ -18,12 +18,21 @@ Update the open pull requests that exist when the run begins. Preserve contribut
 - Continue with the next PR after a PR-specific failure. Stop the whole run only when a shared prerequisite such as authentication or base-repository access is unavailable.
 - Keep the original language of code and documentation. Use the user's language for progress updates and result reports, including the final report.
 
+## GitHub Access And Fallbacks
+
+- Prefer `gh` for GitHub metadata and CI reads when it is authenticated and available.
+- If a `gh` read command fails because `gh` is unavailable, unauthenticated, missing scopes, rate-limited, or blocked by the execution environment, use the available GitHub MCP / GitHub app connector tools as the fallback for read-only GitHub operations.
+- Read-only operations include listing open PRs, refreshing PR metadata, reading branch names and head/base SHAs, checking mergeability and cross-repository status, reading review or check status, finding Actions runs for a commit, and inspecting failed check logs when the connector exposes them.
+- Do not use MCP fallback as a substitute for local repository operations. Fetching refs, creating worktrees, merging, resolving conflicts, committing, and pushing must still be done with local `git`.
+- If both `gh` and MCP / connector reads are unavailable, stop only when the missing data is a shared prerequisite for the whole run. Otherwise record the affected PR as failed with the exact unavailable operation.
+- Record which source supplied each run-critical GitHub datum when a fallback was used, especially PR head SHA, base SHA, check conclusion, and failed-log summary.
+
 ## 1. Establish The Run Snapshot
 
 1. Confirm that the current directory belongs to a Git repository and inspect `git status --short --branch` without modifying it.
 2. Identify the base repository and its Git remote. Do not assume the remote is named `origin` when repository metadata proves otherwise.
-3. Confirm `gh auth status` and confirm access to the base repository before fetching or creating worktrees.
-4. List all open PRs with structured `gh` output. Capture at least:
+3. Confirm GitHub read access before fetching or creating worktrees. Start with `gh auth status`; if it fails for an environment or `gh`-specific reason, verify access through the GitHub MCP / connector instead.
+4. List all open PRs with structured `gh` output, or with GitHub MCP / connector output if `gh` cannot provide it. Capture at least:
    - PR number, URL, title, and draft status
    - head repository, head branch, and head SHA
    - base repository, base branch, and base SHA
@@ -32,7 +41,7 @@ Update the open pull requests that exist when the run begins. Preserve contribut
 5. Freeze this list as the run snapshot and process it in PR-number order. Include draft PRs. PRs opened after the snapshot belong to a later run.
 6. Record the initial CI state before changing any branch. Use check names and logs later to distinguish pre-existing failures from failures introduced by the merge.
 
-Prefer `gh pr list --state open --json ...` for the initial set and `gh pr view <number> --json ...` when fields or current values need refreshing. Query available JSON fields with `gh ... --json` rather than guessing unsupported fields.
+Prefer `gh pr list --state open --json ...` for the initial set and `gh pr view <number> --json ...` when fields or current values need refreshing. Query available JSON fields with `gh ... --json` rather than guessing unsupported fields. When falling back to MCP / connector tools, request the same fields explicitly and normalize the result into the same internal snapshot shape before processing PRs.
 
 ## 2. Prepare One PR
 
@@ -41,7 +50,7 @@ For each PR in the snapshot:
 1. Refresh the PR metadata. If it was closed or merged, report it as skipped.
 2. Reject a cross-repository head or any head that cannot be pushed by the authenticated user. Do not mutate it.
 3. Fetch the current base branch and the PR head SHA into uniquely named temporary refs. Fetch the PR head through `refs/pull/<number>/head` when that is the reliable source of truth.
-4. Verify that the fetched head SHA matches the refreshed PR metadata. Refresh and retry when it changed during preparation.
+4. Verify that the fetched head SHA matches the refreshed PR metadata from `gh` or MCP / connector. Refresh and retry when it changed during preparation.
 5. Create a unique directory with `mktemp -d` and attach a temporary branch and worktree at the fetched PR head.
 6. Inspect repository instructions and validation entrypoints before editing. Check `AGENTS.md`, contributor documentation, CI workflows, task runners, and language manifests relevant to the changed files.
 
@@ -90,7 +99,7 @@ If validation cannot run because of missing credentials, unavailable services, o
 
 ## 6. Monitor And Attribute CI
 
-1. Confirm that checks started for the pushed SHA. Use `gh pr checks` and Actions run metadata or logs as appropriate.
+1. Confirm that checks started for the pushed SHA. Use `gh pr checks` and Actions run metadata or logs as appropriate; if those `gh` reads fail, use GitHub MCP / connector tools to read the commit's check suites, check runs, statuses, workflow runs, and exposed logs.
 2. Monitor all checks until they reach terminal states. Treat success, neutral, and intentionally skipped checks according to repository policy; do not treat pending or queued checks as complete.
 3. On failure, verify that the failing run belongs to the pushed SHA and inspect its failed logs.
 4. Compare the check with the initial CI snapshot:
@@ -116,6 +125,7 @@ Report every PR in the run snapshot and group the results into `Updated`, `Alrea
 - intentional changed files beyond the base merge
 - validation commands and outcomes
 - push result
+- GitHub metadata source for critical reads when not `gh`
 - remaining risk or required decision
 
 For each failure, state the cause and the next required permission, specification decision, or infrastructure action. End with totals for all snapshot PRs and explicitly disclose any validation or CI that did not complete.
