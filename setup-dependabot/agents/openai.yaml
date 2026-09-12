@@ -1,0 +1,4 @@
+interface:
+  display_name: "Set Up Dependabot"
+  short_description: "Detect dependencies and configure Dependabot safely"
+  default_prompt: "Use $setup-dependabot to inspect this repository, create or update its Dependabot configuration and labels, validate the result, and report GitHub security settings and CI risks."
