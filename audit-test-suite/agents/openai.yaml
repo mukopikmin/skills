@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit Test Suite"
+  short_description: "Find tests worth deleting or consolidating"
+  default_prompt: "Use $audit-test-suite to inspect the entire test suite and list every test that should be deleted or consolidated."
