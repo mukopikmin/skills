@@ -1,0 +1,5 @@
+name: audit-test-suite
+version: 1.0.0
+description: Audit a test suite for deletion and consolidation candidates
+author: mukopikmin
+license: MIT

@@ -1,0 +1,5 @@
+name: gh-update-open-prs
+version: 1.0.0
+description: Update all open GitHub pull requests with their latest base branches
+author: mukopikmin
+license: MIT

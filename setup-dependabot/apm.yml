@@ -1,0 +1,5 @@
+name: setup-dependabot
+version: 1.0.0
+description: Configure and audit Dependabot safely
+author: mukopikmin
+license: MIT

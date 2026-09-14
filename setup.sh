@@ -57,4 +57,4 @@ for skill_md in ./*/SKILL.md; do
   ensure_link "$user_skills_root/$skill_name" "$script_dir/$skill_name"
 done
 
-printf 'Codex skill links ready: %s created, %s unchanged\n' "$created" "$unchanged"
+printf 'Agent skill links ready: %s created, %s unchanged\n' "$created" "$unchanged"
