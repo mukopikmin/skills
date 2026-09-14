@@ -1,0 +1,10 @@
+name: mukopikmin-skills
+version: 1.0.0
+description: Bundle of the gh-update-open-prs, setup-dependabot, and audit-test-suite skills
+author: mukopikmin
+license: MIT
+
+dependencies:
+  - mukopikmin/skills/gh-update-open-prs
+  - mukopikmin/skills/setup-dependabot
+  - mukopikmin/skills/audit-test-suite
