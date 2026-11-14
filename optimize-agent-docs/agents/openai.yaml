@@ -1,0 +1,4 @@
+interface:
+  display_name: "Optimize Agent Docs"
+  short_description: "Reduce redundant agent documentation"
+  default_prompt: "Use $optimize-agent-docs to review and optimize this repository's agent documentation, preserving essential instructions and replacing redundant detail with useful references."
