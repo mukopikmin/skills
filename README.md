@@ -1,46 +1,40 @@
 # Skills
 
-This repository distributes four agent skills:
+Portable agent skills:
 
-- `gh-update-open-prs`
-- `setup-dependabot`
-- `audit-test-suite`
-- `optimize-agent-docs`: reduce redundant agent documentation while preserving essential guidance and useful references.
+- [gh-update-open-prs](gh-update-open-prs/SKILL.md): update open pull requests with their latest base branches.
+- [setup-dependabot](setup-dependabot/SKILL.md): configure or audit Dependabot.
+- [audit-test-suite](audit-test-suite/SKILL.md): identify tests to delete or consolidate.
+- [optimize-agent-docs](optimize-agent-docs/SKILL.md): reduce redundant agent documentation while preserving essential guidance.
 
-Each skill directory is its single source of truth. The root `apm.yml` bundles the four independent APM packages as dependencies without copying their skill files.
+Each skill directory is its single source of truth: `SKILL.md` contains portable instructions and `agents/openai.yaml` provides optional OpenAI interface metadata. Other compatible agents can use the instructions without that metadata.
 
-The skills are not limited to Codex. `SKILL.md` contains the portable skill instructions, while `agents/openai.yaml` provides optional OpenAI-specific interface metadata. A compatible agent can use the skill instructions without consuming that metadata.
+## Install with APM
 
-## Install all skills with APM
+Install all skills through the dependencies in [apm.yml](apm.yml):
 
 ```sh
 apm install mukopikmin/skills
 ```
 
-The root package installs all four skills through its dependencies. For each skill, the installed payload consists of `<skill>/SKILL.md` and `<skill>/agents/openai.yaml`. The root package does not contain duplicate skill files.
-
-To update the installed packages, run the following command from the installation target:
-
-```sh
-apm update
-```
-
-## Install one skill with APM
-
-Use the required skill's subdirectory as the package path. For example, install only the Dependabot skill with:
+To install only one skill, append its directory name from the list above:
 
 ```sh
 apm install mukopikmin/skills/setup-dependabot
 ```
 
-The other package paths are `mukopikmin/skills/gh-update-open-prs`, `mukopikmin/skills/audit-test-suite`, and `mukopikmin/skills/optimize-agent-docs`. An individual installation places only the selected skill's `SKILL.md` and `agents/openai.yaml`; it does not install the other skills. Use `apm update` to update an individual installation as well.
+Each installed skill includes its `SKILL.md` and `agents/openai.yaml`; the root package does not duplicate them. For either installation method, update from the installation target:
 
-## Existing `setup.sh`
+```sh
+apm update
+```
 
-The existing script remains unchanged as the legacy way to set up every skill without APM. Running it links all skills in the repository:
+## Install with symbolic links
+
+Run [setup.sh](setup.sh) to link every skill without APM:
 
 ```sh
 ./setup.sh
 ```
 
-For each skill, the script creates symbolic links at `.agents/skills/<skill>` in the repository and `~/.agents/skills/<skill>` for the user. Both links point to the original skill directory. Because no files are copied, update the linked skills by running `git pull` in this repository. The script does not overwrite regular files or existing links that point elsewhere. For an individual installation, use the APM method above rather than this script.
+The script links each original skill directory at `.agents/skills/<skill>` in the repository and `~/.agents/skills/<skill>` for the user. It refuses to overwrite regular files or links pointing elsewhere. Update linked skills with `git pull` in this repository. Use APM to install a single skill.
