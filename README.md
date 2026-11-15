@@ -1,12 +1,15 @@
 # Skills
 
-This repository distributes three agent skills:
+This repository distributes four agent skills:
 
 - `gh-update-open-prs`
+- `gh-resolve-pr-conflicts`
 - `setup-dependabot`
 - `audit-test-suite`
 
-Each skill directory is its single source of truth. The root `apm.yml` bundles the three independent APM packages as dependencies without copying their skill files.
+`gh-update-open-prs` updates every open PR with its latest base branch. `gh-resolve-pr-conflicts` resolves and pushes only confirmed conflicts, leaving conflict-free PRs untouched to avoid unnecessary CI runs.
+
+Each skill directory is its single source of truth. The root `apm.yml` bundles the four independent APM packages as dependencies without copying their skill files.
 
 The skills are not limited to Codex. `SKILL.md` contains the portable skill instructions, while `agents/openai.yaml` provides optional OpenAI-specific interface metadata. A compatible agent can use the skill instructions without consuming that metadata.
 
@@ -16,7 +19,7 @@ The skills are not limited to Codex. `SKILL.md` contains the portable skill inst
 apm install mukopikmin/skills
 ```
 
-The root package installs all three skills through its dependencies. For each skill, the installed payload consists of `<skill>/SKILL.md` and `<skill>/agents/openai.yaml`. The root package does not contain duplicate skill files.
+The root package installs all four skills through its dependencies. For each skill, the installed payload consists of `<skill>/SKILL.md` and `<skill>/agents/openai.yaml`. The root package does not contain duplicate skill files.
 
 To update the installed packages, run the following command from the installation target:
 
@@ -32,7 +35,7 @@ Use the required skill's subdirectory as the package path. For example, install 
 apm install mukopikmin/skills/setup-dependabot
 ```
 
-The other package paths are `mukopikmin/skills/gh-update-open-prs` and `mukopikmin/skills/audit-test-suite`. An individual installation places only the selected skill's `SKILL.md` and `agents/openai.yaml`; it does not install the other skills. Use `apm update` to update an individual installation as well.
+The other package paths are `mukopikmin/skills/gh-update-open-prs`, `mukopikmin/skills/gh-resolve-pr-conflicts`, and `mukopikmin/skills/audit-test-suite`. An individual installation places only the selected skill's `SKILL.md` and `agents/openai.yaml`; it does not install the other skills. Use `apm update` to update an individual installation as well.
 
 ## Existing `setup.sh`
 
