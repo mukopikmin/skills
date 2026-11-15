@@ -21,8 +21,7 @@ Update the open pull requests that exist when the run begins. Preserve contribut
 ## GitHub Access And Fallbacks
 
 - Prefer `gh` for GitHub metadata and CI reads when it is authenticated and available.
-- If a `gh` read command fails because `gh` is unavailable, unauthenticated, missing scopes, rate-limited, or blocked by the execution environment, use the available GitHub MCP / GitHub app connector tools as the fallback for read-only GitHub operations.
-- Read-only operations include listing open PRs, refreshing PR metadata, reading branch names and head/base SHAs, checking mergeability and cross-repository status, reading review or check status, finding Actions runs for a commit, and inspecting failed check logs when the connector exposes them.
+- If a `gh` read fails because it is unavailable, unauthenticated, missing scopes, rate-limited, or blocked by the environment, use GitHub MCP / GitHub app connector tools for the metadata, checks, and logs required below, where supported.
 - Do not use MCP fallback as a substitute for local repository operations. Fetching refs, creating worktrees, merging, resolving conflicts, committing, and pushing must still be done with local `git`.
 - If both `gh` and MCP / connector reads are unavailable, stop only when the missing data is a shared prerequisite for the whole run. Otherwise record the affected PR as failed with the exact unavailable operation.
 - Record which source supplied each run-critical GitHub datum when a fallback was used, especially PR head SHA, base SHA, check conclusion, and failed-log summary.
@@ -31,8 +30,8 @@ Update the open pull requests that exist when the run begins. Preserve contribut
 
 1. Confirm that the current directory belongs to a Git repository and inspect `git status --short --branch` without modifying it.
 2. Identify the base repository and its Git remote. Do not assume the remote is named `origin` when repository metadata proves otherwise.
-3. Confirm GitHub read access before fetching or creating worktrees. Start with `gh auth status`; if it fails for an environment or `gh`-specific reason, verify access through the GitHub MCP / connector instead.
-4. List all open PRs with structured `gh` output, or with GitHub MCP / connector output if `gh` cannot provide it. Capture at least:
+3. Confirm GitHub read access before fetching or creating worktrees. Start with `gh auth status` and apply the access fallbacks above if needed.
+4. List all open PRs with structured output. Capture at least:
    - PR number, URL, title, and draft status
    - head repository, head branch, and head SHA
    - base repository, base branch, and base SHA
@@ -99,7 +98,7 @@ If validation cannot run because of missing credentials, unavailable services, o
 
 ## 6. Monitor And Attribute CI
 
-1. Confirm that checks started for the pushed SHA. Use `gh pr checks` and Actions run metadata or logs as appropriate; if those `gh` reads fail, use GitHub MCP / connector tools to read the commit's check suites, check runs, statuses, workflow runs, and exposed logs.
+1. Confirm that checks started for the pushed SHA. Use `gh pr checks` and Actions run metadata or logs, applying the access fallbacks above to read the commit's check suites, check runs, statuses, workflow runs, and exposed logs.
 2. Monitor all checks until they reach terminal states. Treat success, neutral, and intentionally skipped checks according to repository policy; do not treat pending or queued checks as complete.
 3. On failure, verify that the failing run belongs to the pushed SHA and inspect its failed logs.
 4. Compare the check with the initial CI snapshot:
