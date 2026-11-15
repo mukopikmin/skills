@@ -1,12 +1,6 @@
 # Skills
 
-Portable agent skills:
-
-- [gh-update-open-prs](gh-update-open-prs/SKILL.md): update open pull requests with their latest base branches.
-- [gh-resolve-pr-conflicts](gh-resolve-pr-conflicts/SKILL.md): resolve and push only confirmed PR conflicts, leaving conflict-free PRs untouched to avoid unnecessary CI runs.
-- [setup-dependabot](setup-dependabot/SKILL.md): configure or audit Dependabot.
-- [audit-test-suite](audit-test-suite/SKILL.md): identify tests to delete or consolidate.
-- [optimize-agent-docs](optimize-agent-docs/SKILL.md): reduce redundant agent documentation while preserving essential guidance.
+Portable agent skills. See [apm.yml](apm.yml) for available packages and each skill directory's `SKILL.md` for usage.
 
 Each skill directory is its single source of truth: `SKILL.md` contains portable instructions and `agents/openai.yaml` provides optional OpenAI interface metadata. Other compatible agents can use the instructions without that metadata.
 
@@ -18,7 +12,7 @@ Install all skills through the dependencies in [apm.yml](apm.yml):
 apm install mukopikmin/skills
 ```
 
-To install only one skill, append its directory name from the list above:
+To install only one skill, append the target skill directory name:
 
 ```sh
 apm install mukopikmin/skills/setup-dependabot
