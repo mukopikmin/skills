@@ -1,4 +1,4 @@
 interface:
   display_name: "Resolve PR Conflicts"
   short_description: "Resolve conflicting PRs and leave clean PRs untouched"
-  default_prompt: "Use $gh-resolve-pr-conflicts to inspect all open pull requests in the target repository, resolve and validate only confirmed merge conflicts, push without force, check CI for pushed resolutions, and report every PR. Leave conflict-free PRs untouched."
+  default_prompt: "Use $gh-resolve-pr-conflicts to inspect all open pull requests in the target repository, resolve merge conflicts or persistent GitHub CONFLICTING results using verified current head/base SHAs, validate, push without force, verify GitHub mergeability, monitor CI to terminal outcomes, and report every PR. Leave confirmed conflict-free PRs untouched."
