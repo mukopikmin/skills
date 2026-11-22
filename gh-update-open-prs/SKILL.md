@@ -5,8 +5,6 @@ description: Update every open GitHub pull request in the current repository by 
 
 # Update Open Pull Requests
 
-Update the open pull requests that exist when the run begins. Preserve contributor work, isolate each PR in a temporary worktree, and produce a result for every PR even when one PR fails.
-
 ## Safety Rules
 
 - Never discard, stash, overwrite, or reformat changes in the user's existing worktree.
@@ -20,11 +18,10 @@ Update the open pull requests that exist when the run begins. Preserve contribut
 
 ## GitHub Access And Fallbacks
 
-- Prefer `gh` for GitHub metadata and CI reads when it is authenticated and available.
-- If a `gh` read fails because it is unavailable, unauthenticated, missing scopes, rate-limited, or blocked by the environment, use GitHub MCP / GitHub app connector tools for the metadata, checks, and logs required below, where supported.
-- Do not use MCP fallback as a substitute for local repository operations. Fetching refs, creating worktrees, merging, resolving conflicts, committing, and pushing must still be done with local `git`.
-- If both `gh` and MCP / connector reads are unavailable, stop only when the missing data is a shared prerequisite for the whole run. Otherwise record the affected PR as failed with the exact unavailable operation.
-- Record which source supplied each run-critical GitHub datum when a fallback was used, especially PR head SHA, base SHA, check conclusion, and failed-log summary.
+- Use authenticated `gh` for GitHub reads. If unavailable, unauthenticated, blocked, rate-limited, or missing scopes, use GitHub MCP/app connector for the required metadata, checks, and logs where supported.
+- Use local `git` for fetches, worktrees, merges, conflict resolution, commits, and pushes.
+- If both read paths fail, stop for a missing shared prerequisite. Otherwise fail only the affected PR and record the exact unavailable read.
+- Record each critical fallback source, especially for head/base SHAs, check conclusions, and failure logs.
 
 ## 1. Establish The Run Snapshot
 
@@ -37,28 +34,26 @@ Update the open pull requests that exist when the run begins. Preserve contribut
    - base repository, base branch, and base SHA
    - cross-repository status and maintainer modification setting
    - current check names, states, conclusions, and links
-5. Freeze this list as the run snapshot and process it in PR-number order. Include draft PRs. PRs opened after the snapshot belong to a later run.
-6. Record the initial CI state before changing any branch. Use check names and logs later to distinguish pre-existing failures from failures introduced by the merge.
+5. Freeze the list, including drafts. Process in PR-number order. Exclude PRs opened later.
+6. Capture CI before modifying any branch. Compare check names and logs with this baseline to attribute failures.
 
-Prefer `gh pr list --state open --json ...` for the initial set and `gh pr view <number> --json ...` when fields or current values need refreshing. Query available JSON fields with `gh ... --json` rather than guessing unsupported fields. When falling back to MCP / connector tools, request the same fields explicitly and normalize the result into the same internal snapshot shape before processing PRs.
+Prefer `gh pr list --state open --json ...` and refresh with `gh pr view <number> --json ...`. Check supported fields with `gh ... --json`. Request the same fields from the connector and normalize its output.
 
 ## 2. Prepare One PR
-
-For each PR in the snapshot:
 
 1. Refresh the PR metadata. If it was closed or merged, report it as skipped.
 2. Reject a cross-repository head or any head that cannot be pushed by the authenticated user. Do not mutate it.
 3. Fetch the current base branch and the PR head SHA into uniquely named temporary refs. Fetch the PR head through `refs/pull/<number>/head` when that is the reliable source of truth.
-4. Verify that the fetched head SHA matches the refreshed PR metadata from `gh` or MCP / connector. Refresh and retry when it changed during preparation.
+4. Match the fetched head SHA against refreshed PR metadata. Refresh and retry if the head moved.
 5. Create a unique directory with `mktemp -d` and attach a temporary branch and worktree at the fetched PR head.
 6. Inspect repository instructions and validation entrypoints before editing. Check `AGENTS.md`, contributor documentation, CI workflows, task runners, and language manifests relevant to the changed files.
 
-Use names containing the PR number for temporary refs, branches, and worktrees. Check for collisions instead of deleting an existing name that may belong to another process.
+Include the PR number in temporary ref, branch, and worktree names. Check for collisions and preserve existing names.
 
 ## 3. Merge The Latest Base
 
 1. If the latest base SHA is already an ancestor of the PR head, do not create an empty merge. Record the PR as already current, then verify its current CI state.
-2. Otherwise, run a non-fast-forward, no-commit merge of the fetched base into the isolated PR branch, equivalent to:
+2. Otherwise, run this in the isolated PR worktree:
 
    ```bash
    git merge --no-ff --no-commit <fetched-base-ref>
@@ -98,15 +93,14 @@ If validation cannot run because of missing credentials, unavailable services, o
 
 ## 6. Monitor And Attribute CI
 
-1. Confirm that checks started for the pushed SHA. Use `gh pr checks` and Actions run metadata or logs, applying the access fallbacks above to read the commit's check suites, check runs, statuses, workflow runs, and exposed logs.
-2. Monitor all checks until they reach terminal states. Treat success, neutral, and intentionally skipped checks according to repository policy; do not treat pending or queued checks as complete.
-3. On failure, verify that the failing run belongs to the pushed SHA and inspect its failed logs.
+1. Confirm checks started for the pushed SHA. Use `gh pr checks`, Actions metadata/logs, or the read fallback for check suites, runs, statuses, workflows, and available logs.
+2. Monitor every check until terminal or concretely blocked. Apply repository policy to successful, neutral, and intentionally skipped checks. Pending and queued checks are incomplete.
+3. For failures, match the run to the pushed SHA and inspect the failed logs.
 4. Compare the check with the initial CI snapshot:
    - Fix failures introduced by the base merge or conflict resolution.
    - Re-run the relevant local validation, commit the focused fix, push normally, and monitor the new SHA again.
    - Report failures that clearly predate the merge instead of changing unrelated PR behavior.
 5. Treat cancelled runs, unavailable runners, billing limits, and external-service failures as infrastructure outcomes unless logs show a code failure. Report them without speculative code changes.
-6. Continue until the latest pushed SHA has completed CI or a concrete blocker has been identified. Do not report a running check as passed.
 
 ## 7. Clean Up
 

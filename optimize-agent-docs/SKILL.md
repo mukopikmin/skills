@@ -5,7 +5,7 @@ description: Optimize repository documentation read by agents, including AGENTS.
 
 # Optimize Agent Docs
 
-Reduce the effort required to find and understand instructions while preserving the information agents need to make correct decisions. Optimize or clean-up requests authorize documentation edits; audit, review, or proposal requests are read-only. Commit, push, or open a pull request only when requested.
+Make agent instructions easier to find and understand while preserving decision-critical information. Optimization or cleanup authorizes documentation edits. Audits, reviews, and proposals are read-only. Commit, push, or open a PR only on request.
 
 ## 1. Establish Scope And Reading Paths
 
@@ -16,9 +16,7 @@ Reduce the effort required to find and understand instructions while preserving 
 
 ## 2. Evaluate Information Value
 
-For each candidate passage, ask: **If this disappears, what concrete mistake becomes more likely, and where else could an agent obtain the information at what cost?**
-
-Compare suspect descriptions with the relevant code, configuration, commands, and other documents. Consult history only when intent is unclear. Classify by evidence, not length alone:
+For each passage, identify the mistake its removal could cause and the cost of finding equivalent guidance elsewhere. Check relevant code, config, commands, and documentation. Consult history only for unclear intent. Choose by evidence:
 
 | Action | When appropriate |
 | --- | --- |
@@ -28,19 +26,19 @@ Compare suspect descriptions with the relevant code, configuration, commands, an
 | Move | Details needed only for a particular task, with a clear entrypoint explaining when to consult them. |
 | Delete | Obsolete procedures, superseded duplication, or text that helps neither decisions nor discovery. |
 
-Code describes current behavior; documentation may define intended behavior, unimplemented requirements, compatibility promises, or architectural constraints. A mismatch is evidence to investigate, not permission to erase the documented contract. Keep unresolved passages and state the specific uncertainty.
+Investigate mismatches with code. Documentation can define intent, future requirements, compatibility promises, or architectural constraints. Keep unresolved passages and state the uncertainty.
 
 ## 3. Make Focused Changes
 
 - Preserve unique obligations, prohibitions, exceptions, and verification steps. Shorten their expression without weakening their meaning.
 - Consolidate repeated guidance at the appropriate common scope and link to it where needed. Preserve intentional local overrides and do not broaden directory-specific rules.
 - Replace implementation walkthroughs, file inventories, and copied configuration with concise navigation when reading the source is cheaper and equally informative.
-- Keep useful examples when they clarify an ambiguous rule or a likely error. Remove examples that add no distinct guidance.
+- Keep examples that clarify ambiguity or prevent likely errors. Remove examples with no distinct guidance.
 - Move task-specific detail out of frequently loaded instructions only when agents can reliably discover and load it. Account for loader behavior; a link does not guarantee a file will be read. Do not move mandatory instructions to optional references.
 - Avoid fragmenting a coherent procedure across many files or replacing one useful explanation with a chain of lookups. Update inbound references before deleting or relocating a document.
 - Keep edits within documentation and any necessary documentation metadata or generation source. Report unrelated code problems separately.
 
-Do not target a word count or reduction percentage. Do not add exhaustive inventories, boilerplate warnings, or a permanent audit report that recreates the reading cost being removed.
+Do not set word-count or reduction targets or add exhaustive inventories, boilerplate warnings, or permanent audits that recreate reading cost.
 
 ## 4. Validate And Report
 
@@ -49,4 +47,4 @@ Do not target a word count or reduction percentage. Do not add exhaustive invent
 3. Trace representative affected tasks: can an agent still find the applicable constraints, implementation entrypoint, and validation command without excessive lookups?
 4. Run applicable existing documentation, link, or metadata checks when available. Avoid application tests for prose-only changes; validate executable examples or generation changes when affected.
 
-Report the scope reviewed, main edits or proposals with their evidence, validation performed, and unresolved questions or exclusions. For an audit, identify concrete paths and passages plus the proposed action. Mention size reduction only as supporting information; success means less reading and maintenance with the necessary guidance preserved.
+Report scope, evidence for edits or proposals, validation, and remaining uncertainties or exclusions. For audits, identify the path, passage, and proposed action. Treat size reduction as secondary to cheaper reading and maintenance with necessary guidance intact.

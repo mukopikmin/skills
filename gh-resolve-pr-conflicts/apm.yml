@@ -1,5 +1,5 @@
 name: gh-resolve-pr-conflicts
-version: 1.0.1
+version: 1.0.2
 description: Resolve PR conflicts and persistent GitHub mergeability disagreements
 author: mukopikmin
 license: MIT

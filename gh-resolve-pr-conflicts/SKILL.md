@@ -5,12 +5,12 @@ description: Inspect open GitHub pull requests and resolve merge conflicts or pe
 
 # Resolve Pull Request Conflicts
 
-Resolve conflicts in the open PRs that exist when the run begins, including cases where GitHub reports `CONFLICTING` but a local merge check is clean. Being behind base, failing CI, or waiting for review alone never justifies an update. A repeated run must leave confirmed conflict-free PRs untouched.
+Resolve conflicts in the initial open-PR snapshot, including persistent GitHub `CONFLICTING` results with a clean local check. Leave confirmed conflict-free PRs untouched on every run.
 
 ## Scope And Safety
 
 - Treat inspection-only requests as read-only. Merge, commit, and push only when the user asks to resolve conflicts.
-- Never update a confirmed conflict-free PR: no base merge commit, rebase, empty commit, push, branch-update API call, CI rerun, or PR comment. A clean local check does **not** establish this outcome while GitHub reports `CONFLICTING` or mergeability remains undetermined. The narrowly scoped base-integration exception is in section 3.
+- For confirmed conflict-free PRs, skip merges, rebases, empty commits, pushes, branch-update calls, CI reruns, and comments. For a locally clean check with GitHub `CONFLICTING` or undetermined, follow sections 2–3.
 - Do not merge or close PRs, change their labels or review state, or post comments. Report results in the conversation.
 - Never discard, stash, overwrite, or reformat changes in the user's existing worktree. Use an isolated temporary worktree for each PR needing a real merge.
 - Never use `git reset --hard`, force push, rebase, or a blanket ours/theirs conflict strategy.
@@ -22,11 +22,11 @@ Resolve conflicts in the open PRs that exist when the run begins, including case
 
 1. Read applicable `AGENTS.md` and repository instructions. Inspect `git status --short --branch` without changing the worktree.
 2. Identify the explicitly requested repository, or the current Git repository when none was specified. Verify its base-repository identity and Git remote; do not assume `origin`. If the target cannot be identified unambiguously, ask for it before any writes.
-3. Prefer authenticated `gh` for GitHub reads. If `gh auth status` fails inside a sandbox, retry with permitted network access before concluding that credentials are invalid. Use available GitHub MCP / connector tools when `gh` is unavailable, blocked, unauthenticated, missing scopes, or rate-limited. Treat Git remote authentication independently.
+3. Prefer authenticated `gh`. Retry sandboxed `gh auth status` with permitted network access before diagnosing invalid credentials. Fall back to GitHub MCP/connector for unavailability, authentication/scope errors, environment blocks, or rate limits. Check Git remote auth separately.
 4. Fetch all pages of open PR metadata, including drafts. Capture PR number, URL, title, draft status, head/base repositories, branch names and SHAs, cross-repository status, and mergeability. Freeze the PR-number list and process it in ascending order; new PRs belong to the next run.
-5. Prefer structured `gh pr list` / `gh pr view` output. Inspect supported JSON fields instead of guessing field names. Normalize connector results into the same snapshot shape and record the source of critical fallback reads.
+5. Prefer structured `gh pr list` / `gh pr view` output. Check available JSON fields. Normalize connector results to those fields and record critical fallback sources.
 
-GitHub MCP can supply PR metadata, branch information, diffs, checks, and logs where exposed. Local `git` must still perform fetches, merge checks, worktree creation, conflict resolution, commits, and pushes. If required metadata is unavailable from both sources, report the affected PR as undetermined rather than mutating it.
+Use the connector for supported reads (PRs, branches, diffs, checks, logs) and local `git` for fetches, merge checks, worktrees, conflict resolution, commits, and pushes. If neither source supplies required metadata, report the PR as undetermined and leave it untouched.
 
 ## 2. Establish Current SHAs And Reconcile Mergeability
 
@@ -48,7 +48,7 @@ GitHub MCP can supply PR metadata, branch information, diffs, checks, and logs w
    - GitHub still `CONFLICTING` with a clean or inconclusive local check: proceed to section 3. Never terminate as no conflict.
    - GitHub still unknown and locally clean: **Undetermined**, no writes. Unknown alone does not authorize a base update.
 
-Fetching and merge simulation do not authorize remote writes. Check head ownership and push access before preparing an update. Inspection-only runs report the discrepancy and any local findings without committing or pushing.
+Check head ownership and push access before preparing an update. Fetching and simulation do not authorize remote writes. On inspection-only runs, report discrepancies and local findings.
 
 ## 3. Resolve Conflicts Or Persistent GitHub Disagreement
 
@@ -70,11 +70,11 @@ Fetching and merge simulation do not authorize remote writes. Check head ownersh
 
 ## 4. Validate The Merge
 
-1. Apply these checks to both conflict resolutions and clean base-integration merges. Confirmed conflict-free PRs need no local validation or CI monitoring.
-2. Run repository-standard checks appropriate to the combined changes: applicable formatting checks, lint, type checks, tests, and build checks. Start with focused checks, then run required broader validation according to repository instructions.
-3. Prefer check-only formatting. Scope required rewriting to relevant files and inspect generated changes.
-4. Fix failures caused by the merge or resolution. Compare with the original head and base to identify pre-existing failures; do not expand the task to unrelated repairs.
-5. Inspect staged and unstaged changes. Commit and push only after required validation succeeds. If validation is blocked or fails, preserve useful diagnostic work when necessary and report the blocker without pushing an unverified merge.
+1. Validate actual resolutions and clean base-integration merges. Confirmed conflict-free PRs require neither validation nor CI monitoring.
+2. Run applicable repository-standard formatting checks, lint, type checks, tests, and builds. Start focused, then run required broader checks.
+3. Prefer check-only formatting. Scope rewrites to relevant files and inspect generated changes.
+4. Compare against the original head and base. Fix only merge-induced failures.
+5. Inspect staged and unstaged changes. Commit and push only after required validation passes. If blocked or failed, report the blocker and preserve useful diagnostic work.
 
 ## 5. Recheck And Push Without Force
 
@@ -108,4 +108,4 @@ Report every snapshot PR with its number, URL, head -> base, and one outcome:
 - **Skipped**: closed/merged, fork, deleted head, or insufficient access, with the reason. An inaccessible `CONFLICTING` PR remains unresolved.
 - **Unresolved / undetermined / failed**: state GitHub's remaining result, the checks attempted (metadata, branch tips, fetched SHAs, merge-tree exit code and paths, real merge if attempted), mismatched SHAs and sources, and the exact cause preventing safe determination or update. Include failed validation, rejected pushes, retry exhaustion, incomplete CI, and the next required action as applicable.
 
-Include totals, metadata sources, SHA discrepancies, and incomplete validation or CI. A locally clean result alone never completes a task while GitHub still reports `CONFLICTING`. Do not claim this skill prevented CI triggered independently by other users or automation.
+Summarize totals, metadata sources, SHA discrepancies, and incomplete checks. Do not claim to have prevented independent CI triggers by other users or automation.
