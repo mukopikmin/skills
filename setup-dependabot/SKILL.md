@@ -5,14 +5,11 @@ description: Configure, update, or audit Dependabot for the current GitHub repos
 
 # Set Up Dependabot
 
-Inspect the repository before choosing ecosystems or directories. Preserve intentional policy, keep unrelated files unchanged, and distinguish repository-file changes from GitHub settings.
-
 ## Safety And Scope
 
-- Treat review, explanation, and audit requests as read-only. Create or update files and labels only when the user asks to set up, configure, add, or update Dependabot.
-- Preserve unrelated working-tree changes. Do not commit, push, open a pull request, change workflows, or enable or disable repository security settings unless the user separately requests it.
-- Limit GitHub writes in the normal setup workflow to creating missing labels referenced by the generated configuration. Never delete or rewrite existing labels.
-- Continue local inspection and YAML work when GitHub access is unavailable. Report remote state as unknown and omit labels that could not be confirmed or created.
+- Reviews, explanations, and audits are read-only. A request to set up, add, configure, or update Dependabot authorizes the Dependabot file and creation of its missing labels. Preserve existing labels and unrelated edits.
+- Commit, push, open a PR, edit workflows, or change security settings only on separate request.
+- If GitHub is unavailable, continue local work within the requested scope and report remote state as unknown. Apply the label rules below.
 - Consult GitHub's current official [supported ecosystems](https://docs.github.com/en/code-security/reference/supply-chain-security/supported-ecosystems-and-repositories) and [options reference](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference) instead of relying on a stale ecosystem list.
 
 ## 1. Inspect The Repository
@@ -20,8 +17,8 @@ Inspect the repository before choosing ecosystems or directories. Preserve inten
 1. Confirm the current directory belongs to a Git repository and inspect `git status --short --branch` without disturbing user changes.
 2. Read applicable `AGENTS.md` files and repository contribution instructions.
 3. Enumerate Git-tracked manifests, lockfiles, runtime version declarations, workspace definitions, and `.github/workflows/*.yml` or `.yaml`. Exclude dependency caches, vendored trees, build output, and generated files.
-4. Read any existing `.github/dependabot.yml` or `.yaml` completely. Record its ecosystems, directories, target branches, registries, schedules, cooldowns, groups, labels, limits, and allow/ignore rules.
-5. Identify the GitHub repository from verified remote metadata. Do not assume the remote is named `origin`. Keep local configuration possible when no GitHub remote can be established.
+4. Read any existing `.github/dependabot.yml` or `.yaml` in full. Record its ecosystems, directories, target branches, registries, schedules, cooldowns, groups, labels, limits, and allow/ignore rules.
+5. Verify the GitHub repo from remote metadata without assuming `origin`. Continue locally if no GitHub remote can be verified.
 
 ## 2. Select Ecosystems And Update Roots
 
@@ -60,7 +57,7 @@ updates:
     open-pull-requests-limit: 5
 ```
 
-Replace `directory` with `directories` when the ecosystem has multiple update roots. Use stable group identifiers derived from the ecosystem value, such as `github-actions-security-updates` and `github-actions-dependencies`.
+Derive stable group identifiers from the ecosystem, as in the template.
 
 When updating an existing configuration:
 
@@ -72,17 +69,12 @@ When updating an existing configuration:
 
 ## 4. Ensure Required Labels
 
-Use `dependencies` plus one label for each configured `package-ecosystem`, using the exact ecosystem value such as `npm`, `deno`, or `github-actions`.
+Before finalizing YAML, resolve `dependencies` and the exact ecosystem label for each entry.
 
-1. Confirm GitHub authentication and repository access. If `gh auth status` fails inside a sandbox, retry with network-enabled or escalated execution before treating the credentials as invalid. Use the available GitHub connector for repository reads or label operations when `gh` is unavailable and the connector exposes the required capability.
-2. List repository labels and compare names case-insensitively. When a matching label exists, preserve its actual spelling, color, and description and reference that spelling in the YAML.
-3. Create only missing labels:
-   - `dependencies`: color `0366d6`, description `Pull requests that update dependencies`
-   - ecosystem label: color `1d76db`, description `Dependency updates for <ecosystem>`
-4. Do not use a force/update option when creating labels. If creation reports that a concurrent creator already added the label, refresh the label list and use the confirmed label.
-5. Reference only labels confirmed to exist. If access or creation fails, omit the missing label from the entry and report the exact failure. If no label can be confirmed, omit the `labels` key so Dependabot can apply its default label behavior.
-
-Create labels before finalizing the YAML so the file never intentionally references a nonexistent label.
+1. Verify authentication and repository access. Retry sandboxed `gh auth status` with network access or escalation before diagnosing invalid credentials. If `gh` is unavailable, use the GitHub connector for supported reads or label operations.
+2. List repository labels and match case-insensitively. Use the existing spelling in YAML and retain color and description.
+3. For missing labels, create `dependencies` with color `0366d6` and description `Pull requests that update dependencies`. Use `1d76db` and `Dependency updates for <ecosystem>` for ecosystem labels. Never force/update labels. If another process creates one first, refresh the list and confirm it.
+4. Include only confirmed labels. On access or creation failure, omit that label and report the exact failure. If none are confirmed for an entry, omit its `labels` key to allow Dependabot defaults.
 
 ## 5. Inspect GitHub Settings And CI Risks
 
@@ -92,7 +84,7 @@ Read but do not change these repository settings:
 - Check Dependabot security updates with `GET /repos/{owner}/{repo}/automated-security-fixes`; report `enabled`, `paused`, `disabled`, or `unknown` from the response and verified permissions.
 - Treat `404` as unknown rather than disabled when repository access or required administration-read permission cannot be established.
 
-Inspect workflows for behavior likely to break or create noise on Dependabot pull requests, including unconditional secret use, notifications that run without checking secret availability, elevated permissions, and assumptions that every pull request has access to repository secrets. Report file and line evidence. Do not edit workflows as part of ordinary Dependabot setup.
+Inspect Dependabot PR workflows for unconditional secret use, notifications lacking secret checks, elevated permissions, and assumptions about PR secret access. Cite file and line for each risk.
 
 ## 6. Validate
 
@@ -105,8 +97,6 @@ Inspect workflows for behavior likely to break or create noise on Dependabot pul
 Do not claim GitHub has accepted the configuration merely because local YAML parsing succeeds. State the validation boundary explicitly.
 
 ## Final Report
-
-Report:
 
 - created or updated configuration path
 - detected ecosystems and update roots, with the manifest evidence for each
